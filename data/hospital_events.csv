@@ -1,9 +1,9 @@
-
 case_id,activity,timestamp,department
 P001,Registration,2026-10-01 09:00,Reception
 P001,Consultation,2026-10-01 09:20,Outpatient
 P001,Laboratory Test,2026-10-01 10:00,Lab
 P001,Treatment,2026-10-01 11:00,Treatment
+P001,Pharmacy,2026-10-01 11:30,Pharmacy
 P001,Discharge,2026-10-01 12:00,Outpatient
 P002,Registration,2026-10-01 09:10,Reception
 P002,Consultation,2026-10-01 09:45,Outpatient
@@ -14,7 +14,8 @@ P003,Consultation,2026-10-01 10:25,Outpatient
 P003,Laboratory Test,2026-10-01 11:00,Lab
 P003,Consultation,2026-10-01 12:00,Outpatient
 P003,Treatment,2026-10-01 12:30,Treatment
-P003,Discharge,2026-10-01 13:00,Outpatient
+P003,Pharmacy,2026-10-01 12:50,Pharmacy
+P003,Discharge,2026-10-01 13:15,Outpatient
 P004,Registration,2026-10-01 11:00,Reception
 P004,Consultation,2026-10-01 11:30,Outpatient
 P004,Laboratory Test,2026-10-01 12:15,Lab
@@ -23,4 +24,62 @@ P004,Discharge,2026-10-01 14:00,Outpatient
 P005,Registration,2026-10-01 12:00,Reception
 P005,Consultation,2026-10-01 12:20,Outpatient
 P005,Treatment,2026-10-01 13:00,Treatment
-P005,Discharge,2026-10-01 13:30,Outpatient
+P005,Pharmacy,2026-10-01 13:20,Pharmacy
+P005,Discharge,2026-10-01 13:40,Outpatient
+P006,Registration,2026-10-02 08:30,Reception
+P006,Consultation,2026-10-02 09:00,Outpatient
+P006,Imaging,2026-10-02 09:40,Radiology
+P006,Treatment,2026-10-02 10:30,Treatment
+P006,Pharmacy,2026-10-02 11:00,Pharmacy
+P006,Discharge,2026-10-02 11:30,Outpatient
+P007,Registration,2026-10-02 09:15,Reception
+P007,Consultation,2026-10-02 09:40,Outpatient
+P007,Laboratory Test,2026-10-02 10:15,Lab
+P007,Imaging,2026-10-02 11:00,Radiology
+P007,Consultation,2026-10-02 11:45,Outpatient
+P007,Treatment,2026-10-02 12:30,Treatment
+P007,Discharge,2026-10-02 13:00,Outpatient
+P008,Registration,2026-10-02 10:00,Reception
+P008,Consultation,2026-10-02 10:20,Outpatient
+P008,Treatment,2026-10-02 11:00,Treatment
+P008,Discharge,2026-10-02 11:20,Outpatient
+P009,Registration,2026-10-02 10:30,Reception
+P009,Consultation,2026-10-02 11:10,Outpatient
+P009,Laboratory Test,2026-10-02 11:50,Lab
+P009,Treatment,2026-10-02 12:40,Treatment
+P009,Pharmacy,2026-10-02 13:10,Pharmacy
+P009,Discharge,2026-10-02 13:30,Outpatient
+P010,Registration,2026-10-03 08:45,Reception
+P010,Consultation,2026-10-03 09:15,Outpatient
+P010,Imaging,2026-10-03 10:00,Radiology
+P010,Treatment,2026-10-03 10:45,Treatment
+P010,Discharge,2026-10-03 11:15,Outpatient
+P011,Registration,2026-10-03 09:00,Reception
+P011,Consultation,2026-10-03 09:30,Outpatient
+P011,Laboratory Test,2026-10-03 10:15,Lab
+P011,Consultation,2026-10-03 11:00,Outpatient
+P011,Treatment,2026-10-03 11:30,Treatment
+P011,Pharmacy,2026-10-03 12:00,Pharmacy
+P011,Discharge,2026-10-03 12:30,Outpatient
+P012,Registration,2026-10-03 10:15,Reception
+P012,Consultation,2026-10-03 10:45,Outpatient
+P012,Treatment,2026-10-03 11:15,Treatment
+P012,Discharge,2026-10-03 11:45,Outpatient
+P013,Registration,2026-10-04 09:00,Reception
+P013,Consultation,2026-10-04 09:25,Outpatient
+P013,Laboratory Test,2026-10-04 10:00,Lab
+P013,Treatment,2026-10-04 11:00,Treatment
+P013,Discharge,2026-10-04 11:30,Outpatient
+P014,Registration,2026-10-04 09:30,Reception
+P014,Consultation,2026-10-04 10:00,Outpatient
+P014,Imaging,2026-10-04 10:50,Radiology
+P014,Consultation,2026-10-04 11:30,Outpatient
+P014,Treatment,2026-10-04 12:15,Treatment
+P014,Pharmacy,2026-10-04 12:45,Pharmacy
+P014,Discharge,2026-10-04 13:10,Outpatient
+P015,Registration,2026-10-04 10:30,Reception
+P015,Consultation,2026-10-04 11:00,Outpatient
+P015,Laboratory Test,2026-10-04 11:45,Lab
+P015,Treatment,2026-10-04 12:30,Treatment
+P015,Pharmacy,2026-10-04 13:00,Pharmacy
+P015,Discharge,2026-10-04 13:30,Outpatient
