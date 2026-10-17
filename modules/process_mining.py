@@ -5,8 +5,8 @@ def discover_process_graph(df):
     event_log = pm4py.format_dataframe(
         df.copy(),
         case_id="case_id",
-        activity="activity",
-        timestamp="timestamp"
+        activity_key="activity",
+        timestamp_key="timestamp"
     )
     dfg, start_activities, end_activities = pm4py.discover_dfg(event_log)
     transitions = [
