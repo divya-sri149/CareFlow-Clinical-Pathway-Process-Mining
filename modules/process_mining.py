@@ -1,5 +1,6 @@
 import pm4py
 import pandas as pd
+import plotly.graph_objects as go
 
 def discover_process_graph(df):
     event_log = pm4py.format_dataframe(
@@ -14,6 +15,31 @@ def discover_process_graph(df):
         for (src, target), count in dfg.items()
     ]
     return pd.DataFrame(transitions), start_activities, end_activities
+
+def create_sankey_diagram(transitions_df):
+    all_nodes = list(pd.concat([transitions_df["Source"], transitions_df["Target"]]).unique())
+    node_map = {node: idx for idx, node in enumerate(all_nodes)}
+    
+    source_indices = transitions_df["Source"].map(node_map).tolist()
+    target_indices = transitions_df["Target"].map(node_map).tolist()
+    values = transitions_df["Count"].tolist()
+    
+    fig = go.Figure(data=[go.Sankey(
+        node=dict(
+            pad=15,
+            thickness=20,
+            line=dict(color="black", width=0.5),
+            label=all_nodes,
+            color="royalblue"
+        ),
+        link=dict(
+            source=source_indices,
+            target=target_indices,
+            value=values
+        )
+    )])
+    fig.update_layout(title_text="Clinical Pathway Process Flow (Sankey)", font_size=12)
+    return fig
 
 def calculate_waiting_times(df):
     df_sorted = df.sort_values(by=["case_id", "timestamp"]).copy()
