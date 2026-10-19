@@ -1,7 +1,11 @@
 import streamlit as st
 import plotly.express as px
 from modules.data_preprocessing import load_and_clean_data, get_data_summary
-from modules.process_mining import discover_process_graph, calculate_waiting_times
+from modules.process_mining import (
+    discover_process_graph,
+    create_sankey_diagram,
+    calculate_waiting_times
+)
 
 st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
 st.title("🏥 CareFlow")
@@ -24,21 +28,32 @@ with tab1:
 
 with tab2:
     transitions_df, start_acts, end_acts = discover_process_graph(df)
-    c1, c2 = st.columns([2, 1])
-    with c1:
+    
+    # Visual Sankey Diagram
+    sankey_fig = create_sankey_diagram(transitions_df)
+    st.plotly_chart(sankey_fig, width="stretch")
+    
+    col_a, col_b = st.columns([2, 1])
+    with col_a:
+        st.subheader("Discovered Pathways")
         st.dataframe(transitions_df, width="stretch")
-    with c2:
+    with col_b:
+        st.subheader("Entry & Exit Points")
         st.write("**Start Activities:**", dict(start_acts))
         st.write("**End Activities:**", dict(end_acts))
 
 with tab3:
     avg_waits = calculate_waiting_times(df)
+    
+    st.subheader("Average Transition Delays")
     st.dataframe(avg_waits, width="stretch")
+    
     fig = px.bar(
         avg_waits,
         x="From Activity",
         y="Avg Waiting Time (Mins)",
         color="To Activity",
-        barmode="group"
+        barmode="group",
+        title="Waiting Times Between Clinical Activities"
     )
     st.plotly_chart(fig, width="stretch")
