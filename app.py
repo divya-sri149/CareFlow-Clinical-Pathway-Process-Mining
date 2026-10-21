@@ -8,52 +8,99 @@ from modules.process_mining import (
 )
 
 st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
+
+# Sidebar - Upload & Controls
+st.sidebar.title("⚙️ Dashboard Controls")
+
+uploaded_file = st.sidebar.file_uploader("Upload Hospital CSV Log", type=["csv"])
+
+# Data loading
+if uploaded_file is not None:
+    raw_df = load_and_clean_data(uploaded_file)
+    st.sidebar.success("Custom event log loaded!")
+else:
+    raw_df = load_and_clean_data("data/hospital_events.csv")
+    st.sidebar.info("Using default hospital dataset.")
+
+# Sidebar Filters
+st.sidebar.markdown("---")
+st.sidebar.subheader("🔍 Filters")
+
+all_departments = sorted(raw_df["department"].dropna().unique().tolist()) if "department" in raw_df.columns else []
+selected_departments = st.sidebar.multiselect(
+    "Select Departments",
+    options=all_departments,
+    default=all_departments
+)
+
+all_cases = sorted(raw_df["case_id"].unique().tolist())
+selected_cases = st.sidebar.multiselect(
+    "Filter by Patient ID",
+    options=all_cases,
+    default=all_cases[:10] if len(all_cases) >= 10 else all_cases
+)
+
+# Apply Filters
+filtered_df = raw_df[raw_df["case_id"].isin(selected_cases)]
+if "department" in raw_df.columns and selected_departments:
+    filtered_df = filtered_df[filtered_df["department"].isin(selected_departments)]
+
+# Main Dashboard Heading
 st.title("🏥 CareFlow")
 st.subheader("Clinical Pathway Process Mining")
 
-df = load_and_clean_data()
-summary = get_data_summary(df)
+if filtered_df.empty:
+    st.warning("Filters match ayye records emi levu. Please select at least one department and patient.")
+else:
+    summary = get_data_summary(filtered_df)
 
-col1, col2, col3, col4 = st.columns(4)
-col1.metric("Total Patients", summary["total_cases"])
-col2.metric("Total Activities", summary["total_events"])
-col3.metric("Unique Activities", summary["activities_count"])
-col4.metric("Departments", summary["departments_count"])
+    # Top KPI Metrics
+    col1, col2, col3, col4 = st.columns(4)
+    col1.metric("Selected Patients", summary["total_cases"])
+    col2.metric("Total Activities", summary["total_events"])
+    col3.metric("Unique Activities", summary["activities_count"])
+    col4.metric("Departments", summary["departments_count"])
 
-st.markdown("---")
-tab1, tab2, tab3 = st.tabs(["📋 Clinical Event Log", "🔄 Process Flow", "⏱️ Bottleneck & Waiting Times"])
+    st.markdown("---")
+    tab1, tab2, tab3 = st.tabs(["📋 Clinical Event Log", "🔄 Process Flow", "⏱️ Bottleneck & Waiting Times"])
 
-with tab1:
-    st.dataframe(df, width="stretch")
+    with tab1:
+        st.write(f"Showing **{len(filtered_df)}** event records based on selected filters:")
+        st.dataframe(filtered_df, width="stretch")
 
-with tab2:
-    transitions_df, start_acts, end_acts = discover_process_graph(df)
-    
-    # Visual Sankey Diagram
-    sankey_fig = create_sankey_diagram(transitions_df)
-    st.plotly_chart(sankey_fig, width="stretch")
-    
-    col_a, col_b = st.columns([2, 1])
-    with col_a:
-        st.subheader("Discovered Pathways")
-        st.dataframe(transitions_df, width="stretch")
-    with col_b:
-        st.subheader("Entry & Exit Points")
-        st.write("**Start Activities:**", dict(start_acts))
-        st.write("**End Activities:**", dict(end_acts))
+    with tab2:
+        transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
+        
+        if not transitions_df.empty:
+            sankey_fig = create_sankey_diagram(transitions_df)
+            st.plotly_chart(sankey_fig, width="stretch")
+            
+            col_a, col_b = st.columns([2, 1])
+            with col_a:
+                st.subheader("Discovered Pathways")
+                st.dataframe(transitions_df, width="stretch")
+            with col_b:
+                st.subheader("Entry & Exit Points")
+                st.write("**Start Activities:**", dict(start_acts))
+                st.write("**End Activities:**", dict(end_acts))
+        else:
+            st.info("Transitions discover cheyadaniki saripada data points levu.")
 
-with tab3:
-    avg_waits = calculate_waiting_times(df)
-    
-    st.subheader("Average Transition Delays")
-    st.dataframe(avg_waits, width="stretch")
-    
-    fig = px.bar(
-        avg_waits,
-        x="From Activity",
-        y="Avg Waiting Time (Mins)",
-        color="To Activity",
-        barmode="group",
-        title="Waiting Times Between Clinical Activities"
-    )
-    st.plotly_chart(fig, width="stretch")
+    with tab3:
+        avg_waits = calculate_waiting_times(filtered_df)
+        
+        if not avg_waits.empty:
+            st.subheader("Average Transition Delays")
+            st.dataframe(avg_waits, width="stretch")
+            
+            fig = px.bar(
+                avg_waits,
+                x="From Activity",
+                y="Avg Waiting Time (Mins)",
+                color="To Activity",
+                barmode="group",
+                title="Waiting Times Between Clinical Activities"
+            )
+            st.plotly_chart(fig, width="stretch")
+        else:
+            st.info("Waiting times calculate cheyadaniki consecutive events saripoledu.")
