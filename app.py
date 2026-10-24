@@ -9,12 +9,11 @@ from modules.process_mining import (
 
 st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
 
-# Sidebar - Upload & Controls
+# Sidebar - Controls & Upload
 st.sidebar.title("⚙️ Dashboard Controls")
 
 uploaded_file = st.sidebar.file_uploader("Upload Hospital CSV Log", type=["csv"])
 
-# Data loading
 if uploaded_file is not None:
     raw_df = load_and_clean_data(uploaded_file)
     st.sidebar.success("Custom event log loaded!")
@@ -22,7 +21,6 @@ else:
     raw_df = load_and_clean_data("data/hospital_events.csv")
     st.sidebar.info("Using default hospital dataset.")
 
-# Sidebar Filters
 st.sidebar.markdown("---")
 st.sidebar.subheader("🔍 Filters")
 
@@ -40,12 +38,12 @@ selected_cases = st.sidebar.multiselect(
     default=all_cases[:10] if len(all_cases) >= 10 else all_cases
 )
 
-# Apply Filters
+# Apply filters
 filtered_df = raw_df[raw_df["case_id"].isin(selected_cases)]
 if "department" in raw_df.columns and selected_departments:
     filtered_df = filtered_df[filtered_df["department"].isin(selected_departments)]
 
-# Main Dashboard Heading
+# Main Dashboard
 st.title("🏥 CareFlow")
 st.subheader("Clinical Pathway Process Mining")
 
@@ -54,7 +52,6 @@ if filtered_df.empty:
 else:
     summary = get_data_summary(filtered_df)
 
-    # Top KPI Metrics
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Selected Patients", summary["total_cases"])
     col2.metric("Total Activities", summary["total_events"])
@@ -67,6 +64,15 @@ else:
     with tab1:
         st.write(f"Showing **{len(filtered_df)}** event records based on selected filters:")
         st.dataframe(filtered_df, width="stretch")
+        
+        # Export Filtered Data
+        csv_data = filtered_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Cleaned Data (CSV)",
+            data=csv_data,
+            file_name="careflow_cleaned_events.csv",
+            mime="text/csv"
+        )
 
     with tab2:
         transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
@@ -92,6 +98,15 @@ else:
         if not avg_waits.empty:
             st.subheader("Average Transition Delays")
             st.dataframe(avg_waits, width="stretch")
+            
+            # Export Waiting Times
+            waits_csv = avg_waits.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Bottleneck Report (CSV)",
+                data=waits_csv,
+                file_name="careflow_bottleneck_report.csv",
+                mime="text/csv"
+            )
             
             fig = px.bar(
                 avg_waits,
