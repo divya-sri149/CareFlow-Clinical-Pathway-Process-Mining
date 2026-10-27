@@ -6,6 +6,7 @@ from modules.process_mining import (
     create_sankey_diagram,
     calculate_waiting_times
 )
+from modules.conformance_checking import check_conformance
 
 st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
 
@@ -59,13 +60,16 @@ else:
     col4.metric("Departments", summary["departments_count"])
 
     st.markdown("---")
-    tab1, tab2, tab3 = st.tabs(["📋 Clinical Event Log", "🔄 Process Flow", "⏱️ Bottleneck & Waiting Times"])
+    tab1, tab2, tab3, tab4 = st.tabs([
+        "📋 Clinical Event Log",
+        "🔄 Process Flow",
+        "⏱️ Bottleneck & Waiting Times",
+        "🎯 Conformance & Deviations"
+    ])
 
     with tab1:
         st.write(f"Showing **{len(filtered_df)}** event records based on selected filters:")
         st.dataframe(filtered_df, width="stretch")
-        
-        # Export Filtered Data
         csv_data = filtered_df.to_csv(index=False).encode('utf-8')
         st.download_button(
             label="📥 Download Cleaned Data (CSV)",
@@ -76,7 +80,6 @@ else:
 
     with tab2:
         transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
-        
         if not transitions_df.empty:
             sankey_fig = create_sankey_diagram(transitions_df)
             st.plotly_chart(sankey_fig, width="stretch")
@@ -94,12 +97,9 @@ else:
 
     with tab3:
         avg_waits = calculate_waiting_times(filtered_df)
-        
         if not avg_waits.empty:
             st.subheader("Average Transition Delays")
             st.dataframe(avg_waits, width="stretch")
-            
-            # Export Waiting Times
             waits_csv = avg_waits.to_csv(index=False).encode('utf-8')
             st.download_button(
                 label="📥 Download Bottleneck Report (CSV)",
@@ -107,7 +107,6 @@ else:
                 file_name="careflow_bottleneck_report.csv",
                 mime="text/csv"
             )
-            
             fig = px.bar(
                 avg_waits,
                 x="From Activity",
@@ -119,3 +118,18 @@ else:
             st.plotly_chart(fig, width="stretch")
         else:
             st.info("Waiting times calculate cheyadaniki consecutive events saripoledu.")
+
+    with tab4:
+        st.subheader("Expected vs. Actual Pathway Conformance")
+        st.markdown("**Standard Expected Flow:** `Registration ➔ Consultation ➔ Treatment ➔ Discharge`")
+        
+        conf_df = check_conformance(filtered_df)
+        st.dataframe(conf_df, width="stretch")
+        
+        # Conformance breakdown chart
+        fig_conf = px.pie(
+            conf_df,
+            names="Conformance Status",
+            title="Patient Pathway Conformance Breakdown"
+        )
+        st.plotly_chart(fig_conf, width="stretch")
