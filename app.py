@@ -7,6 +7,7 @@ from modules.process_mining import (
     calculate_waiting_times
 )
 from modules.conformance_checking import check_conformance
+from modules.performance_analysis import generate_executive_insights
 
 st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
 
@@ -60,11 +61,12 @@ else:
     col4.metric("Departments", summary["departments_count"])
 
     st.markdown("---")
-    tab1, tab2, tab3, tab4 = st.tabs([
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📋 Clinical Event Log",
         "🔄 Process Flow",
         "⏱️ Bottleneck & Waiting Times",
-        "🎯 Conformance & Deviations"
+        "🎯 Conformance & Deviations",
+        "💡 Clinical Insights"
     ])
 
     with tab1:
@@ -126,10 +128,18 @@ else:
         conf_df = check_conformance(filtered_df)
         st.dataframe(conf_df, width="stretch")
         
-        # Conformance breakdown chart
         fig_conf = px.pie(
             conf_df,
             names="Conformance Status",
             title="Patient Pathway Conformance Breakdown"
         )
         st.plotly_chart(fig_conf, width="stretch")
+
+    with tab5:
+        st.subheader("Executive Clinical Insights")
+        avg_waits = calculate_waiting_times(filtered_df)
+        conf_df = check_conformance(filtered_df)
+        insights = generate_executive_insights(filtered_df, avg_waits, conf_df)
+        
+        for item in insights:
+            st.markdown(item)
