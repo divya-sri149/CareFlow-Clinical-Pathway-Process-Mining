@@ -9,12 +9,83 @@ from modules.process_mining import (
 from modules.conformance_checking import check_conformance
 from modules.performance_analysis import generate_executive_insights
 
-st.set_page_config(page_title="CareFlow", page_icon="🏥", layout="wide")
+# Page Config
+st.set_page_config(
+    page_title="CareFlow - Clinical Intelligence",
+    page_icon="🏥",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
-# Sidebar - Controls & Upload
-st.sidebar.title("⚙️ Dashboard Controls")
+# Custom Healthcare Styling (CSS)
+st.markdown("""
+<style>
+    /* Main Background & Font */
+    .main {
+        background-color: #f8fafc;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+    
+    /* Header Container */
+    .header-box {
+        background: linear-gradient(135deg, #1e3a8a, #0284c7);
+        padding: 24px;
+        border-radius: 12px;
+        color: white;
+        margin-bottom: 25px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    .header-box h1 {
+        margin: 0;
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: white;
+    }
+    .header-box p {
+        margin: 5px 0 0 0;
+        font-size: 1.05rem;
+        opacity: 0.9;
+    }
 
-uploaded_file = st.sidebar.file_uploader("Upload Hospital CSV Log", type=["csv"])
+    /* Metric Cards */
+    div[data-testid="stMetric"] {
+        background-color: white;
+        border: 1px solid #e2e8f0;
+        padding: 16px;
+        border-radius: 10px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.04);
+        border-left: 5px solid #0284c7;
+    }
+    
+    /* Tabs Design */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 8px;
+    }
+    .stTabs [data-baseweb="tab"] {
+        background-color: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px 8px 0 0;
+        padding: 10px 18px;
+        font-weight: 600;
+        color: #334155;
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #0284c7 !important;
+        color: white !important;
+        border-color: #0284c7 !important;
+    }
+
+    /* Sidebar Clean Look */
+    section[data-testid="stSidebar"] {
+        background-color: #f1f5f9;
+        border-right: 1px solid #cbd5e1;
+    }
+</style>
+""", unsafe_allow_html=True)
+
+# Sidebar
+st.sidebar.markdown("### ⚙️ Control Panel")
+uploaded_file = st.sidebar.file_uploader("📂 Upload Event Log (CSV)", type=["csv"])
 
 if uploaded_file is not None:
     raw_df = load_and_clean_data(uploaded_file)
@@ -24,7 +95,7 @@ else:
     st.sidebar.info("Using default hospital dataset.")
 
 st.sidebar.markdown("---")
-st.sidebar.subheader("🔍 Filters")
+st.sidebar.markdown("### 🔍 Filters")
 
 all_departments = sorted(raw_df["department"].dropna().unique().tolist()) if "department" in raw_df.columns else []
 selected_departments = st.sidebar.multiselect(
@@ -35,111 +106,21 @@ selected_departments = st.sidebar.multiselect(
 
 all_cases = sorted(raw_df["case_id"].unique().tolist())
 selected_cases = st.sidebar.multiselect(
-    "Filter by Patient ID",
+    "Filter Patient IDs",
     options=all_cases,
     default=all_cases[:10] if len(all_cases) >= 10 else all_cases
 )
 
-# Apply filters
+# Apply Filters
 filtered_df = raw_df[raw_df["case_id"].isin(selected_cases)]
 if "department" in raw_df.columns and selected_departments:
     filtered_df = filtered_df[filtered_df["department"].isin(selected_departments)]
 
-# Main Dashboard
-st.title("🏥 CareFlow")
-st.subheader("Clinical Pathway Process Mining")
+# Header
+st.markdown("""
+<div class="header-box">
+    <h1>🏥 CareFlow Clinical Intelligence</h1>
+    <p>Process Mining, Pathway Optimization & Operational Bottleneck Discovery</p>
+</div>
+""", unsafe_allow_html=True)
 
-if filtered_df.empty:
-    st.warning("Filters match ayye records emi levu. Please select at least one department and patient.")
-else:
-    summary = get_data_summary(filtered_df)
-
-    col1, col2, col3, col4 = st.columns(4)
-    col1.metric("Selected Patients", summary["total_cases"])
-    col2.metric("Total Activities", summary["total_events"])
-    col3.metric("Unique Activities", summary["activities_count"])
-    col4.metric("Departments", summary["departments_count"])
-
-    st.markdown("---")
-    tab1, tab2, tab3, tab4, tab5 = st.tabs([
-        "📋 Clinical Event Log",
-        "🔄 Process Flow",
-        "⏱️ Bottleneck & Waiting Times",
-        "🎯 Conformance & Deviations",
-        "💡 Clinical Insights"
-    ])
-
-    with tab1:
-        st.write(f"Showing **{len(filtered_df)}** event records based on selected filters:")
-        st.dataframe(filtered_df, width="stretch")
-        csv_data = filtered_df.to_csv(index=False).encode('utf-8')
-        st.download_button(
-            label="📥 Download Cleaned Data (CSV)",
-            data=csv_data,
-            file_name="careflow_cleaned_events.csv",
-            mime="text/csv"
-        )
-
-    with tab2:
-        transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
-        if not transitions_df.empty:
-            sankey_fig = create_sankey_diagram(transitions_df)
-            st.plotly_chart(sankey_fig, width="stretch")
-            
-            col_a, col_b = st.columns([2, 1])
-            with col_a:
-                st.subheader("Discovered Pathways")
-                st.dataframe(transitions_df, width="stretch")
-            with col_b:
-                st.subheader("Entry & Exit Points")
-                st.write("**Start Activities:**", dict(start_acts))
-                st.write("**End Activities:**", dict(end_acts))
-        else:
-            st.info("Transitions discover cheyadaniki saripada data points levu.")
-
-    with tab3:
-        avg_waits = calculate_waiting_times(filtered_df)
-        if not avg_waits.empty:
-            st.subheader("Average Transition Delays")
-            st.dataframe(avg_waits, width="stretch")
-            waits_csv = avg_waits.to_csv(index=False).encode('utf-8')
-            st.download_button(
-                label="📥 Download Bottleneck Report (CSV)",
-                data=waits_csv,
-                file_name="careflow_bottleneck_report.csv",
-                mime="text/csv"
-            )
-            fig = px.bar(
-                avg_waits,
-                x="From Activity",
-                y="Avg Waiting Time (Mins)",
-                color="To Activity",
-                barmode="group",
-                title="Waiting Times Between Clinical Activities"
-            )
-            st.plotly_chart(fig, width="stretch")
-        else:
-            st.info("Waiting times calculate cheyadaniki consecutive events saripoledu.")
-
-    with tab4:
-        st.subheader("Expected vs. Actual Pathway Conformance")
-        st.markdown("**Standard Expected Flow:** `Registration ➔ Consultation ➔ Treatment ➔ Discharge`")
-        
-        conf_df = check_conformance(filtered_df)
-        st.dataframe(conf_df, width="stretch")
-        
-        fig_conf = px.pie(
-            conf_df,
-            names="Conformance Status",
-            title="Patient Pathway Conformance Breakdown"
-        )
-        st.plotly_chart(fig_conf, width="stretch")
-
-    with tab5:
-        st.subheader("Executive Clinical Insights")
-        avg_waits = calculate_waiting_times(filtered_df)
-        conf_df = check_conformance(filtered_df)
-        insights = generate_executive_insights(filtered_df, avg_waits, conf_df)
-        
-        for item in insights:
-            st.markdown(item)
