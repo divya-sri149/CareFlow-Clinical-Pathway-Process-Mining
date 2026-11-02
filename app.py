@@ -124,3 +124,58 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
+if filtered_df.empty:
+    st.warning("Filters match ayye records levu bro. Please select at least one department and patient.")
+else:
+    # Summary Metrics
+    summary = get_data_summary(filtered_df)
+    c1, c2, c3, c4 = st.columns(4)
+    c1.metric("Selected Patients", summary["total_cases"])
+    c2.metric("Total Activities", summary["total_events"])
+    c3.metric("Unique Stages", summary["activities_count"])
+    c4.metric("Active Departments", summary["departments_count"])
+
+    st.markdown("<br>", unsafe_allow_html=True)
+
+    # Tabs
+    tab1, tab2, tab3, tab4, tab5 = st.tabs([
+        "📋 Event Log",
+        "🔄 Process Pathways",
+        "⏱️ Delay & Bottlenecks",
+        "🎯 Conformance Analysis",
+        "💡 Clinical Insights"
+    ])
+
+    with tab1:
+        st.subheader("Clinical Event Records")
+        st.write(f"Displaying **{len(filtered_df)}** records matching current filters:")
+        st.dataframe(filtered_df, use_container_width=True)
+        
+        csv_data = filtered_df.to_csv(index=False).encode('utf-8')
+        st.download_button(
+            label="📥 Download Filtered Log (CSV)",
+            data=csv_data,
+            file_name="careflow_filtered_events.csv",
+            mime="text/csv"
+        )
+
+    with tab2:
+        transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
+        if not transitions_df.empty:
+            st.subheader("Patient Pathway Flow Map")
+            sankey_fig = create_sankey_diagram(transitions_df)
+            st.plotly_chart(sankey_fig, use_container_width=True)
+            
+            col_a, col_b = st.columns([2, 1])
+            with col_a:
+                st.write("**Discovered Activity Transitions**")
+                st.dataframe(transitions_df, use_container_width=True)
+            with col_b:
+                st.write("**Entry Stages**", dict(start_acts))
+                st.write("**Exit Stages**", dict(end_acts))
+        else:
+            st.info("Transitions discover cheyadaniki saripada data points levu.")
+
+    with tab3:
+        avg_waits = calculate_waiting_times(filtered_df)
+     
