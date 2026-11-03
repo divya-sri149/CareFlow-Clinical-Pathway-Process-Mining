@@ -178,4 +178,28 @@ else:
 
     with tab3:
         avg_waits = calculate_waiting_times(filtered_df)
-     
+        if not avg_waits.empty:
+            st.subheader("Average Operational Delays")
+            st.dataframe(avg_waits, use_container_width=True)
+            
+            waits_csv = avg_waits.to_csv(index=False).encode('utf-8')
+            st.download_button(
+                label="📥 Download Delay Report (CSV)",
+                data=waits_csv,
+                file_name="careflow_delay_report.csv",
+                mime="text/csv"
+            )
+            
+            fig = px.bar(
+                avg_waits,
+                x="From Activity",
+                y="Avg Waiting Time (Mins)",
+                color="To Activity",
+                barmode="group",
+                title="Stage Transition Waiting Times (Minutes)"
+            )
+            st.plotly_chart(fig, use_container_width=True)
+        else:
+            st.info("Waiting times calculate cheyadaniki consecutive data saripoledu.")
+
+   
