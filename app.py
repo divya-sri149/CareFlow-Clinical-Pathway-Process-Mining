@@ -9,7 +9,7 @@ from modules.process_mining import (
 from modules.conformance_checking import check_conformance
 from modules.performance_analysis import generate_executive_insights
 
-# Page Config
+# Page Configuration
 st.set_page_config(
     page_title="CareFlow - Clinical Intelligence",
     page_icon="🏥",
@@ -83,19 +83,19 @@ st.markdown("""
 </style>
 """, unsafe_allow_html=True)
 
-# Sidebar
+# Sidebar - Controls & Upload
 st.sidebar.markdown("### ⚙️ Control Panel")
 uploaded_file = st.sidebar.file_uploader("📂 Upload Event Log (CSV)", type=["csv"])
 
 if uploaded_file is not None:
     raw_df = load_and_clean_data(uploaded_file)
-    st.sidebar.success("Custom event log loaded!")
+    st.sidebar.success("Custom event log loaded successfully!")
 else:
     raw_df = load_and_clean_data("data/hospital_events.csv")
     st.sidebar.info("Using default hospital dataset.")
 
 st.sidebar.markdown("---")
-st.sidebar.markdown("### 🔍 Filters")
+st.sidebar.markdown("### 🔍 Filter Controls")
 
 all_departments = sorted(raw_df["department"].dropna().unique().tolist()) if "department" in raw_df.columns else []
 selected_departments = st.sidebar.multiselect(
@@ -111,12 +111,12 @@ selected_cases = st.sidebar.multiselect(
     default=all_cases[:10] if len(all_cases) >= 10 else all_cases
 )
 
-# Apply Filters
+# Apply Selected Filters
 filtered_df = raw_df[raw_df["case_id"].isin(selected_cases)]
 if "department" in raw_df.columns and selected_departments:
     filtered_df = filtered_df[filtered_df["department"].isin(selected_departments)]
 
-# Header
+# Header Section
 st.markdown("""
 <div class="header-box">
     <h1>🏥 CareFlow Clinical Intelligence</h1>
@@ -125,9 +125,9 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 if filtered_df.empty:
-    st.warning("Filters match ayye records levu bro. Please select at least one department and patient.")
+    st.warning("No records match the selected filters. Please select at least one department and patient ID.")
 else:
-    # Summary Metrics
+    # Summary Metrics Display
     summary = get_data_summary(filtered_df)
     c1, c2, c3, c4 = st.columns(4)
     c1.metric("Selected Patients", summary["total_cases"])
@@ -137,7 +137,7 @@ else:
 
     st.markdown("<br>", unsafe_allow_html=True)
 
-    # Tabs
+    # Navigation Tabs
     tab1, tab2, tab3, tab4, tab5 = st.tabs([
         "📋 Event Log",
         "🔄 Process Pathways",
@@ -146,9 +146,10 @@ else:
         "💡 Clinical Insights"
     ])
 
+    # Tab 1: Clinical Event Log
     with tab1:
         st.subheader("Clinical Event Records")
-        st.write(f"Displaying **{len(filtered_df)}** records matching current filters:")
+        st.write(f"Displaying **{len(filtered_df)}** records matching the active filters:")
         st.dataframe(filtered_df, use_container_width=True)
         
         csv_data = filtered_df.to_csv(index=False).encode('utf-8')
@@ -159,6 +160,7 @@ else:
             mime="text/csv"
         )
 
+    # Tab 2: Discovered Process Flow
     with tab2:
         transitions_df, start_acts, end_acts = discover_process_graph(filtered_df)
         if not transitions_df.empty:
@@ -174,8 +176,9 @@ else:
                 st.write("**Entry Stages**", dict(start_acts))
                 st.write("**Exit Stages**", dict(end_acts))
         else:
-            st.info("Transitions discover cheyadaniki saripada data points levu.")
+            st.info("Insufficient data points to discover pathway transitions.")
 
+    # Tab 3: Delays and Bottleneck Analytics
     with tab3:
         avg_waits = calculate_waiting_times(filtered_df)
         if not avg_waits.empty:
@@ -200,6 +203,20 @@ else:
             )
             st.plotly_chart(fig, use_container_width=True)
         else:
-            st.info("Waiting times calculate cheyadaniki consecutive data saripoledu.")
+            st.info("Insufficient consecutive events to calculate waiting times.")
 
-   
+    # Tab 4: Conformance Checking
+    with tab4:
+        st.subheader("Protocol Conformance & Deviations")
+        st.info("Standard Expected Flow: Registration ➔ Consultation ➔ Treatment ➔ Discharge")
+        
+        conf_df = check_conformance(filtered_df)
+        st.dataframe(conf_df, use_container_width=True)
+        
+        fig_conf = px.pie(
+            conf_df,
+            names="Conformance Status",
+            title="Adherence vs Deviation Breakdown",
+            hole=0.4
+        )
+        st.plotly_chart(fig_conf, use_container_width=True)
