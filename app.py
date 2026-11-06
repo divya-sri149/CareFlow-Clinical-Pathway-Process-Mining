@@ -220,3 +220,11 @@ else:
             hole=0.4
         )
         st.plotly_chart(fig_conf, use_container_width=True)
+     with tab5:
+        st.subheader("Automated Operational Insights")
+        avg_waits = calculate_waiting_times(filtered_df)
+        conf_df = check_conformance(filtered_df)
+        insights = generate_executive_insights(filtered_df, avg_waits, conf_df)
+        
+        for item in insights:
+            st.info(item)
