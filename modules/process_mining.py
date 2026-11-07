@@ -16,29 +16,46 @@ def discover_process_graph(df):
     ]
     return pd.DataFrame(transitions), start_activities, end_activities
 
-def create_sankey_diagram(transitions_df):
-    all_nodes = list(pd.concat([transitions_df["Source"], transitions_df["Target"]]).unique())
+def create_sankey_diagram(df_transitions):
+    # Get unique activity labels
+    all_nodes = list(pd.unique(df_transitions[['Source', 'Target']].values.ravel('K')))
     node_map = {node: idx for idx, node in enumerate(all_nodes)}
     
-    source_indices = transitions_df["Source"].map(node_map).tolist()
-    target_indices = transitions_df["Target"].map(node_map).tolist()
-    values = transitions_df["Count"].tolist()
+    # Map sources, targets, and values
+    sources = df_transitions['Source'].map(node_map).tolist()
+    targets = df_transitions['Target'].map(node_map).tolist()
+    values = df_transitions['Count'].tolist()
+    
+    # Palette for clear node visibility
+    palette = [
+        "#0284c7", "#0ea5e9", "#2563eb", "#7c3aed", 
+        "#059669", "#d97706", "#dc2626", "#475569"
+    ]
+    node_colors = [palette[i % len(palette)] for i in range(len(all_nodes))]
     
     fig = go.Figure(data=[go.Sankey(
         node=dict(
-            pad=15,
-            thickness=20,
-            line=dict(color="black", width=0.5),
+            pad=20,
+            thickness=25,
+            line=dict(color="#1e293b", width=1),
             label=all_nodes,
-            color="royalblue"
+            color=node_colors
         ),
         link=dict(
-            source=source_indices,
-            target=target_indices,
-            value=values
+            source=sources,
+            target=targets,
+            value=values,
+            # Semi-transparent blue for high contrast and visible flow paths
+            color="rgba(2, 132, 199, 0.45)"
         )
     )])
-    fig.update_layout(title_text="Clinical Pathway Process Flow (Sankey)", font_size=12)
+    
+    fig.update_layout(
+        title_text="Patient Pathway Flow Topology",
+        font=dict(size=13, color="#1e293b", family="sans-serif"),
+        height=520,
+        margin=dict(l=20, r=20, t=50, b=25)
+    )
     return fig
 
 def calculate_waiting_times(df):
